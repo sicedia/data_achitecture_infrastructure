@@ -41,7 +41,7 @@ The pipeline processes data in the following sequence:
     -   **Gold Layer**: Creates aggregated tables for BI and analytics (`fct_proforma`).
 4.  **Trino/BI Tools**: End users can query the Gold layer tables for analysis.
 
-```mermaid
+```
 Airbyte (MariaDB → S3/Iceberg: Bronze)
        │
        ▼

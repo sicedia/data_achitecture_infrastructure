@@ -464,3 +464,4 @@ $RECYCLE.BIN/
 
 # Custom
 dbt/models/gold/sia/fct_proforma.sql
+images/architecture.png
