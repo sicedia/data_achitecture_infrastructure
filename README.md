@@ -1,4 +1,4 @@
-# CEDIA Data Lakehouse Architecture
+# Data Lakehouse Architecture
 
 ---
 
