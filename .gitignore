@@ -460,3 +460,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,python,visualstudiocode,jetbrains,intellij,dbt
+
+
+# Custom
+dbt/models/gold/sia/fct_proforma.sql

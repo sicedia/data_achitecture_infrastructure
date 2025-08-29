@@ -29,3 +29,4 @@ SELECT
   ROUND(SUM(COALESCE(total_neto,0)), 2)           AS total_neto
 FROM base
 GROUP BY 1,2,3
+
