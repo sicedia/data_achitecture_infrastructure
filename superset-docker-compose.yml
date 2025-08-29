@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  superset:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: superset
+    environment:
+      - SUPERSET_SECRET_KEY=change_me_please_32_chars
+      - SUPERSET_LOAD_EXAMPLES=no
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin123
+      - ADMIN_FIRST_NAME=Admin
+      - ADMIN_LAST_NAME=User
+      - ADMIN_EMAIL=admin@example.com
+      - MAPBOX_API_KEY=
+    ports:
+      - "8088:8088"
+    depends_on:
+      - superset-db
+      - superset-redis
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # para que 'host.docker.internal' funcione en Docker Linux
+    command: >
+      /bin/bash -c "
+        superset fab create-admin
+          --username $$ADMIN_USERNAME
+          --firstname $$ADMIN_FIRST_NAME
+          --lastname $$ADMIN_LAST_NAME
+          --email $$ADMIN_EMAIL
+          --password $$ADMIN_PASSWORD &&
+        superset db upgrade &&
+        superset init &&
+        gunicorn -w 4 -k gevent --timeout 300 --bind 0.0.0.0:8088 'superset.app:create_app()'
+      "
+    volumes:
+      - superset_home:/app/superset_home
+
+  superset-db:
+    image: postgres:15
+    container_name: superset-db
+    environment:
+      - POSTGRES_DB=superset
+      - POSTGRES_USER=superset
+      - POSTGRES_PASSWORD=superset
+    volumes:
+      - superset_db:/var/lib/postgresql/data
+
+  superset-redis:
+    image: redis:7
+    container_name: superset-redis
+
+volumes:
+  superset_home:
+  superset_db:

@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: stg_proforma
+    description: "Proformas (Silver) estandarizadas desde jvc_proforma en Bronze."
+    columns:
+      - name: proforma_id
+        description: "Identificador técnico (prof_codigo)."
+        tests: [not_null, unique]
+      - name: proforma_numero
+        description: "Número de proforma de negocio."
+      - name: fecha_proforma
+        tests: [not_null]

@@ -1,0 +1,16 @@
+services:
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    ports:
+      - "8080:8080"
+    # 🔸 Monta la CARPETA de catálogos (no un solo archivo)
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog
+    networks:
+      - data-poc
+    restart: unless-stopped
+
+networks:
+  data-poc:
+    external: true

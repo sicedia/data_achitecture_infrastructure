@@ -1,0 +1,39 @@
+name: cedia_dwh
+version: 1.0.0
+config-version: 2
+profile: cedia
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+on-run-start:
+- "{% set silver_loc = 's3a://cedia-datalake-prod/iceberg/silver/sia/' if target.name == 'prod' else 's3a://cedia-datalake-dev/iceberg/silver/sia/' %}{% do create_iceberg_schema(target.database, 'cedia_silver_sia', silver_loc) %}"
+- "{% set gold_loc   = 's3a://cedia-datalake-prod/iceberg/gold/sia/'   if target.name == 'prod' else 's3a://cedia-datalake-dev/iceberg/gold/sia/' %}{% do create_iceberg_schema(target.database, 'cedia_gold_sia', gold_loc) %}"
+  
+
+models:
+  cedia_dwh:
+    +on_schema_change: append_new_columns
+    +persist_docs: {relation: true, columns: true}
+    +tmp_relation_type: table
+    +intermediate_relation_type: table
+
+    silver:
+      +schema: cedia_silver_sia
+      +materialized: incremental
+      +incremental_strategy: merge
+      +properties:
+        format_version: '2'
+      +tmp_relation_type: table
+      +intermediate_relation_type: table
+      sia:
+        +tags: ['silver', 'sia']
+
+    gold:
+      +schema: cedia_gold_sia
+      +materialized: table
+      +tmp_relation_type: table
+      +intermediate_relation_type: table
+      sia:
+        +tags: ['gold', 'sia']

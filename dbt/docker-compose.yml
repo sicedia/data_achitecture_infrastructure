@@ -1,0 +1,21 @@
+services:
+  dbt:
+    build:
+      context: .                  
+      dockerfile: Dockerfile
+    container_name: dbt
+    working_dir: /home/dbtuser/app
+    environment:
+      DBT_PROFILES_DIR: /home/dbtuser/app/profiles
+      DBT_LOG_PATH: /tmp/dbt_logs            
+    command: >
+      bash -lc "mkdir -p /tmp/dbt_logs &&
+                dbt deps &&
+                dbt build --target dev --fail-fast"
+    volumes:
+      - .:/home/dbtuser/app
+    networks:
+      - data-poc
+networks:
+  data-poc:
+    external: true

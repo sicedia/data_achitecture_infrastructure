@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: sia_bronze
+    database: "{{ target.database }}"   # 👈 antes: iceberg_dev
+    schema: cedia_bronze_sia
+    tables:
+      - name: jvc_proforma
