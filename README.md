@@ -83,7 +83,7 @@ docker network connect data-poc 68a10ca66d3f
 ```
 Remplazar 68a10ca66d3f por el id del contenedor general de Airbyte
 
-#### Comprueba
+#### Check
 ```bash
 docker ps --filter "network=data-poc"
 # or
