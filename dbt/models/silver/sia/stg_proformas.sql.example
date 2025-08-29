@@ -1,0 +1,54 @@
+-- This model stages the proformas data from the bronze layer to the silver layer.
+-- It performs type casting, filters out logically deleted records, and sets up incremental loading based on
+-- Is fake schema for testing purposes.
+-- Change the name of the file for stg_proforma.sql when using in production.
+{{ config(
+    materialized='incremental',
+    incremental_strategy='merge',
+    unique_key='proforma_id',
+    tmp_relation_type='table',
+    intermediate_relation_type='table',
+    properties={
+      "format_version": "2"
+    }
+) }}
+
+WITH bronze AS (
+  SELECT
+    prof_codigo,
+    prof_numero,
+    prof_fecha,
+    prof_fechacrea,
+    prof_fechamodifica,
+    prof_fechavalidez,
+    prof_total,
+    prof_subtotal,
+    prof_descuento,
+    prof_impuestos
+  FROM {{ source('sia_bronze','jvc_proforma') }}
+  -- Filter out logically deleted rows
+  WHERE COALESCE(_ab_cdc_deleted_at, '') = ''
+),
+typed AS (
+  SELECT
+    CAST(prof_codigo AS bigint)         AS proforma_id,
+    CAST(prof_numero AS bigint)         AS proforma_numero,
+    CAST(prof_fecha AS date)            AS fecha_proforma,
+    CAST(prof_fechacrea AS timestamp(6)) AS creado_en,
+    CAST(prof_fechamodifica AS timestamp(6)) AS modificado_en,
+    CAST(prof_fechavalidez AS date)      AS fecha_validez,
+    CAST(prof_total AS double)          AS total,
+    CAST(prof_subtotal AS double)       AS subtotal,
+    CAST(prof_descuento AS double)       AS descuento,
+    CAST(prof_impuestos AS double)       AS impuestos
+  FROM bronze
+)
+SELECT
+  *,
+  -- Unified watermark for incremental loads
+  modificado_en AS _wm_last_update
+FROM typed
+
+{% if is_incremental() %}
+WHERE modificado_en > (SELECT COALESCE(MAX(_wm_last_update), TIMESTAMP '1970-01-01 00:00:00') FROM {{ this }})
+{% endif %}

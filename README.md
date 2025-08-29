@@ -192,3 +192,6 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 **Maintainer:** [Felipe Mendieta - CEDIA](mailto:felipe.mendieta@cedia.org.ec)
 
+## Disclaimer
+This project does not contain sensitive data; it is used only for testing deployment purposes.
+

@@ -2,7 +2,6 @@
 
 This document outlines the recommended architecture and best practices for our data platform. It is designed to serve as a reference for data engineers, especially those new to the team or our toolset.
 
-Autor: Felipe Mendieta - Sistemas Internos
 ---
 
 ## **Part 0: Core Principles & Tooling**
@@ -226,3 +225,6 @@ REVOKE SELECT ON TABLE iceberg_prod.cedia_silver_rrhh.dim_empleado FROM ROLE dat
 *   [ ] Airbyte Destinations are set up for `dev` and `prod`.
 *   [ ] dbt models are developed and tested in `dev` before being run in `prod`.
 *   [ ] Security policies (ACLs, `GRANT`/`REVOKE`, PII masking) are in place.
+
+
+Autor: Felipe Mendieta
