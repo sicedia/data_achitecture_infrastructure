@@ -6,6 +6,8 @@ This repository contains the infrastructure-as-code for deploying a modern data 
 
 ## 🏛️ Core Architecture
 
+![Architecture Diagram](./images/architecture.png)
+
 This project implements a robust data architecture based on the following open-source tools:
 
 -   **[MinIO](https://min.io/):** S3-compatible object storage for the data lake.
@@ -65,9 +67,9 @@ This command will start MinIO, Nessie, and Trino in detached mode.
 
 ```bash
 docker compose -p cedia \
-  -f .\minio-docker-compose.yml \
-  -f .\nessie-docker-compose.yml \
-  -f .\trino\trino-docker-compose.yml \
+  -f .\/minio-docker-compose.yml \
+  -f .\/nessie-docker-compose.yml \
+  -f .\/trino\/trino-docker-compose.yml \
   up -d
 ```
 
