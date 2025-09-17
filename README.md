@@ -11,6 +11,7 @@ This repository contains the infrastructure-as-code for deploying a modern data 
 This project implements a robust data architecture based on the following open-source tools:
 
 -   **[MinIO](https://min.io/):** S3-compatible object storage for the data lake.
+-   **[Apache Iceberg](https://iceberg.apache.org/):** The open table format for analytic datasets.
 -   **[Project Nessie](https://projectnessie.org/):** A transactional catalog for the data lake that provides Git-like semantics (branches, tags, commits) for data.
 -   **[Trino](https://trino.io/):** A distributed SQL query engine for high-performance queries on the data lake.
 -   **[Airbyte](https://airbyte.com/):** A data integration platform for ingesting data from various sources into the bronze layer of the data lake.
@@ -22,7 +23,7 @@ For a detailed explanation of the architecture, design principles, and best prac
 
 The pipeline processes data in the following sequence:
 
-1.  **Airbyte**: Ingests data from a MariaDB source and lands it in an S3/Iceberg table (Bronze layer).
+1.  **Airbyte**: Ingests data from a MariaDB source and lands it in an S3/Iceberg open table format (Bronze layer).
 2.  **Trino + Nessie**: Provides the query engine and data cataloging capabilities.
 3.  **dbt**: Executes SQL transformations to clean, standardize, and aggregate the data.
     -   **Silver Layer**: Cleans and standardizes the raw data (`stg_proforma`).
@@ -94,17 +95,45 @@ docker network inspect data-poc
 
 ### 4. Create Nessie Branches
 
-Create branches in Nessie to isolate the `dev`, `stg`, and `prod` environments.
+Create branches in Nessie to isolate the `dev`, and `prod` environments.
 
 ```bash
-# Create dev, stg, and prod branches from main
+# Create dev branche from main
 docker run --rm --network data-poc ghcr.io/projectnessie/nessie-cli:latest --uri http://nessie:19120/api/v2 --non-ansi -c "CREATE BRANCH dev FROM main"
-docker run --rm --network data-poc ghcr.io/projectnessie/nessie-cli:latest --uri http://nessie:19120/api/v2 --non-ansi -c "CREATE BRANCH stg FROM main"
-docker run --rm --network data-poc ghcr.io/projectnessie/nessie-cli:latest --uri http://nessie:19120/api/v2 --non-ansi -c "CREATE BRANCH prod FROM main"
 
 # Verify the branches
 docker run --rm --network data-poc ghcr.io/projectnessie/nessie-cli:latest --uri http://nessie:19120/api/v2 --non-ansi -c "LIST REFERENCES;"
+# There two branches: main (default) and dev
 ```
+
+### 5. Create buckets in Minio
+
+### **Storage (MinIO)**
+
+*   **One bucket per environment.** This is the strongest form of isolation.
+    *   `cedia-datalake-dev`
+    *   `cedia-datalake-prod`
+
+### 5. Ingest data from Airbyte
+### **Ingestion (Airbyte)**
+
+*   **One Destination per environment.**
+    *   **DEV Destination** writes to: `branch=main`, `warehouse=s3://cedia-datalake-dev/iceberg/bronze`.
+    *   **PROD Destination** writes to: `branch=prod`, `warehouse=s3://cedia-datalake-prod/iceberg/bronze`.
+*   **One Connection per source system** (Maridb, Postgresql, etc.). Use the `Destination Namespace` setting to organize data logically, e.g., `db_sia`.
+*   **Note:** By default, Airbyte commits ingested data to the `main` branch in Nessie. For this reason, we will use the `main` branch as our primary `dev` branch. We can then promote changes from `main` to `prod` within Nessie if needed for metadata consistency, but the data transformation workflow remains code-based.
+
+Example of Destination to s3 minio in format iceberg.
+![Airbyte Destination Configuration](images/destionation_airbyte_example.png)
+
+Example of Configuration to connection between Source and Destionation in Airbyte.
+![Airbyte Connection Configuration](images/configuration_between_db_minioiceberg.png)
+
+> **Note:** When you set the `warehouse` parameter in Airbyte, for example `warehouse=s3://cedia-datalake-dev/iceberg/bronze`, Airbyte will automatically create the path and any necessary folders inside MinIO if they do not already exist. You do not need to manually create these folders; Airbyte will handle the directory structure when data is first ingested.
+
+Additionally, the `Destination Namespace` parameter in Airbyte determines the name of the final folder within that path. For example, if you set `Destination Namespace` to `db_sia_intranet`, the data will be stored at:
+
+
 
 ### 5. Create Trino Schemas
 
@@ -121,7 +150,7 @@ Example:
 ```sql
 -- In the Trino CLI
 CREATE SCHEMA IF NOT EXISTS iceberg_dev.cedia_bronze_sia
-  WITH (location='s3a://cedia-datalake-dev/iceberg/bronze/sia/');
+  WITH (location='s3a://cedia-datalake-dev/iceberg/bronze/db_sia_intranet/');
 ```
 
 ## 🛠️ Usage
@@ -131,7 +160,7 @@ CREATE SCHEMA IF NOT EXISTS iceberg_dev.cedia_bronze_sia
 You can connect to Trino using any compatible SQL client, such as DBeaver or DataGrip.
 
 -   **Host:** `localhost`
--   **Port:** `8080`
+-   **Port:** `8083`
 -   **User:** Any username (e.g., `admin`)
 -   **Password:** Leave blank
 
@@ -141,6 +170,10 @@ After connecting, verify that you can see the Iceberg catalogs:
 SHOW CATALOGS;
 -- Expected result includes iceberg_dev and iceberg_prod
 ```
+
+
+Example of catalogs in dbeaver
+![Airbyte Connection Configuration](images/dbeaver_catalogs_trino.png)
 
 ### Running dbt Transformations
 

@@ -1,0 +1,28 @@
+# Python dependencies for Spark + Iceberg + Nessie integration
+# These are automatically installed in the Jupyter container via docker-compose
+
+# Core data processing - TESTED COMPATIBLE VERSIONS
+pynessie==0.67.0
+pyiceberg[s3fs,pandas,duckdb]==0.6.1
+boto3==1.34.0
+s3fs==2023.12.2
+pandas>=2.0.0,<3.0.0
+pyarrow>=13.0.0,<16.0.0
+
+# Additional useful libraries for data analysis
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.17.0
+jupyter-dash>=0.4.2
+
+# Data validation and quality
+great-expectations>=0.18.0
+pydantic>=2.0.0,<3.0.0
+
+# Development and testing
+pytest>=7.4.0
+ipytest>=0.14.0
+
+# Additional useful packages for data work
+jupyterlab>=4.0.0
+notebook>=7.0.0

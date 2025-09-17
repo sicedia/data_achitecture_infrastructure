@@ -1,9 +1,8 @@
 {{ config(
-    materialized='incremental',
-    incremental_strategy='merge',
-    unique_key='proforma_id',
-     tmp_relation_type='table',
-     intermediate_relation_type='table',
+    materialized='table',
+    tmp_relation_type='table',
+    intermediate_relation_type='table',
+    on_schema_change='append_new_columns',
     properties={
       "format_version": "2"
     }
@@ -125,11 +124,6 @@ typed AS (
 )
 SELECT
   *,
-  -- Watermark unificada para incrementales
+  -- Watermark unificada para auditoría
   COALESCE(ab_cdc_updated_ts, modificado_en, airbyte_extracted_ts) AS _wm_last_update
 FROM typed
-
-{% if is_incremental() %}
-WHERE COALESCE(ab_cdc_updated_ts, modificado_en, airbyte_extracted_ts) >
-      (SELECT COALESCE(MAX(_wm_last_update), TIMESTAMP '1970-01-01 00:00:00') FROM {{ this }})
-{% endif %}

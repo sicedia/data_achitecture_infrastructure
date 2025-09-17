@@ -3,11 +3,28 @@ version: 2
 models:
   - name: stg_proforma
     description: "Proformas (Silver) estandarizadas desde jvc_proforma en Bronze."
+    # Configuración para OpenMetadata lineage
+    meta:
+      owner: "data-team"
+      layer: "silver"
+      domain: "sia"
+      source_table: "jvc_proforma"
+      source_schema: "cedia_bronze_sia"
+      transformation_type: "cleaning_standardization"
     columns:
       - name: proforma_id
         description: "Identificador técnico (prof_codigo)."
         tests: [not_null, unique]
+        meta:
+          source_column: "prof_codigo"
+          data_type: "varchar"
       - name: proforma_numero
         description: "Número de proforma de negocio."
+        meta:
+          source_column: "prof_numero"
+          data_type: "varchar"
       - name: fecha_proforma
         tests: [not_null]
+        meta:
+          source_column: "prof_fecha"
+          data_type: "date"

@@ -40,23 +40,21 @@ This section details the recommended setup for each component of our data stack.
 
 *   **One bucket per environment.** This is the strongest form of isolation.
     *   `cedia-datalake-dev`
-    *   `cedia-datalake-stg` (for future use)
     *   `cedia-datalake-prod`
 
 ### **Catalog & Versioning (Nessie)**
 
-*   **A single Nessie repository** with branches for each environment: `dev`, `stg`, `prod`.
+*   **A single Nessie repository** with branches for each environment: `dev`.
 *   Inside the `dev` branch, engineers can create feature branches (e.g., `feature/new-report`) for experimentation.
-*   **Important:** Do not use `MERGE dev -> prod` to "promote" data. The environments use different storage buckets, so a cross-branch merge is not appropriate. Use `MERGE` only within the same environment (e.g., merging a feature branch into `dev`).
+*   **Important:** Do not use `MERGE dev -> main` to "promote" data. The environments use different storage buckets, so a cross-branch merge is not appropriate. Use `MERGE` only within the same environment (e.g., merging a feature branch into `dev`).
 
 ### **Query Engine (Trino)**
 
 *   **A single Trino service** with multiple catalogs defined.
     *   `iceberg_dev`
-    *   `iceberg_stg`
     *   `iceberg_prod`
 *   Each catalog points to its corresponding environment:
-    *   **Nessie Branch:** `dev`, `stg`, or `prod`.
+    *   **Nessie Branch:** `dev` or `main`.
     *   **Warehouse Path:** The correct MinIO bucket (e.g., `s3a://cedia-datalake-dev` for dev, `s3a://cedia-datalake-stg` for stg, etc).
 
 ### **Ingestion (Airbyte)**

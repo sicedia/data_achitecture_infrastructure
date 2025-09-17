@@ -4,7 +4,7 @@ cedia:
     dev:
       type: trino
       host: trino
-      port: 8080
+      port: 8083
       user: dbt
       catalog: iceberg_dev
       schema: cedia_silver_sia
@@ -12,7 +12,7 @@ cedia:
     prod:
       type: trino
       host: trino
-      port: 8080
+      port: 8083
       user: dbt
       catalog: iceberg_prod      # 👈 catálogo prod
       schema: cedia_silver_sia   # da igual; lo sobreescribe el +schema del proyecto

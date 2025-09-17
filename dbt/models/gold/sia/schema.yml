@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: fct_proforma
+    description: "Fact table for proforma data with business metrics and aggregations."
+    # Configuración para OpenMetadata lineage
+    meta:
+      owner: "data-team"
+      layer: "gold"
+      domain: "sia"
+      source_tables: ["stg_proforma", "stg_proformas"]
+      source_schema: "cedia_silver_sia"
+      transformation_type: "aggregation_enrichment"
+      business_purpose: "Business-ready proforma metrics and KPIs"
+    columns:
+      - name: proforma_id
+        description: "Unique identifier for proforma record."
+        tests: [not_null, unique]
+        meta:
+          source_column: "proforma_id"
+          data_type: "varchar"
+          business_key: true
+      - name: proforma_numero
+        description: "Business proforma number."
+        meta:
+          source_column: "proforma_numero"
+          data_type: "varchar"
+      - name: fecha_proforma
+        description: "Proforma date."
+        tests: [not_null]
+        meta:
+          source_column: "fecha_proforma"
+          data_type: "date"
+      - name: total_amount
+        description: "Total proforma amount (calculated field)."
+        meta:
+          calculated_field: true
+          business_metric: true
+          data_type: "decimal"
+      - name: status
+        description: "Proforma status (derived field)."
+        meta:
+          derived_field: true
+          data_type: "varchar"

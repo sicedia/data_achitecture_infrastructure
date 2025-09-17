@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # Spark Master
+  spark-master:
+    image: bitnami/spark:3.5
+    container_name: spark-master
+    hostname: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    ports:
+      - "8082:8080"  # Spark Master Web UI
+      - "7077:7077"  # Spark Master port
+    volumes:
+      - ./spark-config:/opt/bitnami/spark/conf
+      - ./notebooks:/opt/notebooks
+    networks:
+      - data-poc
+    restart: unless-stopped
+
+  # Spark Worker
+  spark-worker:
+    image: bitnami/spark:3.5
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    volumes:
+      - ./spark-config:/opt/bitnami/spark/conf
+      - ./notebooks:/opt/notebooks
+    depends_on:
+      - spark-master
+    networks:
+      - data-poc
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+
+  # Jupyter Notebook with PySpark and Iceberg
+  jupyter:
+    image: jupyter/pyspark-notebook:spark-3.5.0
+    container_name: jupyter-spark
+    user: root
+    ports:
+      - "8888:8888"
+    environment:
+      # Spark Configuration
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_OPTS=--driver-java-options=-Xms1024M --driver-java-options=-Xmx4096M --driver-java-options=-Dlog4j.logLevel=INFO
+      
+      # Jupyter Configuration
+      - JUPYTER_ENABLE_LAB=yes
+      - GRANT_SUDO=yes
+      - CHOWN_HOME=yes
+      - CHOWN_HOME_OPTS=-R
+      
+      # S3/MinIO Configuration
+      - AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+      - AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      - AWS_REGION=us-east-1
+      - S3_ENDPOINT=http://minio:9000
+      
+      # Nessie Configuration
+      - NESSIE_URI=http://nessie:19120/api/v2
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./spark-config:/home/jovyan/spark-config
+      - jupyter-data:/home/jovyan
+    depends_on:
+      - spark-master
+    networks:
+      - data-poc
+    restart: unless-stopped
+    command: >
+      bash -c "
+        pip install --quiet --no-cache-dir -r /home/jovyan/work/requirements.txt &&
+        start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
+      "
+
+volumes:
+  jupyter-data:
+
+networks:
+  data-poc:
+    external: true

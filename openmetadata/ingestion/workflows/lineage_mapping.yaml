@@ -1,0 +1,114 @@
+# Lineage Mapping Configuration
+# Mapea las conexiones entre Airbyte, dbt y Trino para lineage completo
+
+# Configuración de mapeo de sources
+source_mapping:
+  # Mapeo de MariaDB (source en Airbyte) a Bronze (destination en Airbyte)
+  mariadb_to_bronze:
+    source_system: "mariadb"
+    source_database: "sia_db"
+    source_tables:
+      - "jvc_proforma"
+    destination_system: "iceberg"
+    destination_database: "iceberg_dev"
+    destination_schema: "cedia_bronze_sia"
+    destination_tables:
+      - "jvc_proforma"
+    ingestion_tool: "airbyte"
+    connection_name: "mariadb_to_iceberg"
+
+# Configuración de mapeo de dbt
+dbt_mapping:
+  # Mapeo de Bronze a Silver
+  bronze_to_silver:
+    source_schema: "cedia_bronze_sia"
+    source_tables:
+      - "jvc_proforma"
+    destination_schema: "cedia_silver_sia"
+    destination_tables:
+      - "stg_proforma"
+      - "stg_proformas"
+    transformation_type: "cleaning_standardization"
+    
+  # Mapeo de Silver a Gold
+  silver_to_gold:
+    source_schema: "cedia_silver_sia"
+    source_tables:
+      - "stg_proforma"
+      - "stg_proformas"
+    destination_schema: "cedia_gold_sia"
+    destination_tables:
+      - "fct_proforma"
+    transformation_type: "aggregation_enrichment"
+
+# Configuración de mapeo de Trino
+trino_mapping:
+  catalog: "iceberg_dev"
+  schemas:
+    - name: "cedia_bronze_sia"
+      description: "Raw data from Airbyte ingestion"
+      layer: "bronze"
+      source_system: "mariadb"
+    - name: "cedia_silver_sia"
+      description: "Cleaned and standardized data"
+      layer: "silver"
+      source_system: "dbt"
+    - name: "cedia_gold_sia"
+      description: "Business-ready aggregated data"
+      layer: "gold"
+      source_system: "dbt"
+
+# Configuración de lineage completo
+complete_lineage:
+  flow:
+    - step: 1
+      source: "mariadb"
+      source_table: "jvc_proforma"
+      destination: "airbyte"
+      destination_table: "jvc_proforma"
+      transformation: "extract_load"
+    - step: 2
+      source: "airbyte"
+      source_table: "jvc_proforma"
+      destination: "iceberg_bronze"
+      destination_table: "jvc_proforma"
+      transformation: "load_to_iceberg"
+    - step: 3
+      source: "iceberg_bronze"
+      source_table: "jvc_proforma"
+      destination: "dbt_silver"
+      destination_table: "stg_proforma"
+      transformation: "cleaning_standardization"
+    - step: 4
+      source: "dbt_silver"
+      source_table: "stg_proforma"
+      destination: "dbt_gold"
+      destination_table: "fct_proforma"
+      transformation: "aggregation_enrichment"
+
+# Configuración de metadata
+metadata_config:
+  owners:
+    - name: "data-team"
+      email: "data-team@cedia.org"
+      type: "team"
+  
+  tags:
+    - name: "bronze"
+      description: "Raw data layer"
+    - name: "silver"
+      description: "Cleaned data layer"
+    - name: "gold"
+      description: "Business-ready data layer"
+    - name: "sia"
+      description: "SIA domain specific"
+    - name: "mariadb"
+      description: "Source system MariaDB"
+    - name: "airbyte"
+      description: "Ingestion tool Airbyte"
+    - name: "dbt"
+      description: "Transformation tool dbt"
+    - name: "iceberg"
+      description: "Storage format Iceberg"
+    - name: "trino"
+      description: "Query engine Trino"
