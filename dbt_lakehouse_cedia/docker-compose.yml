@@ -7,15 +7,16 @@ services:
     working_dir: /home/dbtuser/app
     environment:
       DBT_PROFILES_DIR: /home/dbtuser/app/profiles
-      DBT_LOG_PATH: /tmp/dbt_logs            
-    command: >
-      bash -lc "mkdir -p /tmp/dbt_logs &&
-                dbt deps &&
-                dbt build --target dev --fail-fast"
+      DBT_LOG_PATH: /tmp/dbt_logs
     volumes:
       - .:/home/dbtuser/app
+      - ./logs:/tmp/dbt_logs   # opcional: persistir logs en el host
     networks:
       - data-poc
+    env_file:
+      - ../.env
+    command: bash -lc "dbt --help"  # default, lo puedes sobreescribir con docker compose run
+
 networks:
   data-poc:
     external: true

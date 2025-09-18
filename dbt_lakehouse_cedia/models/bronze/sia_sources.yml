@@ -1,0 +1,59 @@
+version: 2
+
+sources:
+  - name: sia_bronze
+    description: "Bronze (raw) ingested by Airbyte from SIA intranet"
+    database: "{{ var('trino_catalog') }}"   # <- usa var, no target.database
+    schema: "db_sia_intranet"                # <- aquí está Airbyte
+    # Configuración para OpenMetadata lineage
+    meta:
+      owner: "data-team"
+      source_system: "mariadb"
+      ingestion_tool: "airbyte"
+      data_layer: "bronze"
+    tables:
+      - name: jvc_proforma
+        description: "Raw proforma data from MariaDB via Airbyte"
+        # Configuración para lineage
+        meta:
+          source_table: "jvc_proforma"
+          source_database: "mariadb"
+          ingestion_frequency: "daily"
+        columns:
+          - name: prof_codigo
+            description: "Primary key identifier"
+            tests:
+              - unique
+              - not_null
+          - name: prof_numero
+            description: "Proforma number"
+          - name: prof_fecha
+            description: "Proforma date"
+          - name: prof_areaid
+            description: "Area ID"
+          - name: prof_periodo
+            description: "Period"
+          - name: prof_total
+            description: "Total amount"
+          - name: prof_subtotal
+            description: "Subtotal amount"
+          - name: prof_descuento
+            description: "Discount amount"
+          - name: prof_impuestos
+            description: "Tax amount"
+          - name: prof_nrocupos
+            description: "Number of quotas"
+          - name: prof_area
+            description: "Area name"
+          - name: prof_estado
+            description: "Status"
+          - name: prof_clienteid
+            description: "Client ID"
+          - name: prof_nombrecliente
+            description: "Client name"
+          - name: _ab_cdc_updated_at
+            description: "Airbyte CDC update timestamp"
+          - name: _ab_cdc_deleted_at
+            description: "Airbyte CDC delete timestamp"
+          - name: _airbyte_extracted_at
+            description: "Airbyte extraction timestamp"

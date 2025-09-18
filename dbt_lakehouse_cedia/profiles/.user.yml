@@ -1,0 +1,4 @@
+# dbt user identifier - used for tracking user-specific settings and dbt Cloud integration
+# This file is automatically created by dbt and can be safely deleted if needed
+# dbt will recreate it with a new ID on the next command run
+id: 99cceabb-1055-4d7b-8a69-d30bce998adb

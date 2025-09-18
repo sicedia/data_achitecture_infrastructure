@@ -378,7 +378,7 @@ nano dbt/dbt_project.yml
 **Agregar al dbt_project.yml:**
 ```yaml
 models:
-  cedia_dwh:
+  dbt_lakehouse_cedia:
     silver:
       nuevo_dominio:                    # ← Nuevo dominio
         +tags: ['silver', 'nuevo_dominio']
@@ -730,7 +730,7 @@ sourceConfig:
 ```yaml
 # En dbt_project.yml, configurar tags automáticos
 models:
-  cedia_dwh:
+  dbt_lakehouse_cedia:
     +tags: ['cedia', 'dwh']
     silver:
       +tags: ['silver', 'cleaned']

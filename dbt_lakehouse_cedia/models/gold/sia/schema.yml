@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: fct_sia__proforma
+    description: "Gold: proforma fact table ready for BI"
+    access: public
+    config:
+      contract:
+        enforced: false   # <- desactiva mientras completas todas las columnas
+    meta:
+      owner: "data-team"
+      layer: "gold"
+      domain: "sia"
+      transformation_type: "projection"
+    columns:
+      - name: proforma_id
+        description: "Unique identifier"
+        tests: [not_null, unique]
+        data_type: bigint
+      - name: proforma_numero
+        description: "Business proforma number"
+        data_type: bigint
+      - name: periodo
+        description: "Period from source"
+        data_type: bigint
+      - name: area_id
+        description: "Area identifier"
+        data_type: bigint
+      - name: area_nombre
+        description: "Area name"
+        data_type: varchar
+      - name: fecha_proforma
+        description: "Proforma issuance date"
+        tests: [not_null]
+        data_type: date
+      - name: n_cupos
+        description: "Number of seats/quotas"
+        data_type: double
+      - name: total
+        description: "Total amount"
+        data_type: double
+      - name: descuento
+        description: "Discount amount"
+        data_type: double
+      - name: impuestos
+        description: "Tax amount"
+        data_type: double

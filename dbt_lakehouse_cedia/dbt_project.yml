@@ -1,0 +1,55 @@
+name: 'dbt_lakehouse_cedia'
+version: '1.0.0'
+config-version: 2
+profile: 'cedia'
+
+# Required flags for Elementary package
+flags:
+  require_explicit_package_overrides_for_builtin_materializations: false
+
+vars:
+  trino_catalog: "{{ env_var('TRINO_CATALOG','iceberg_dev') }}"
+  openmetadata_host_port: "{{ env_var('OPENMETADATA_HOST','http://openmetadata-server:8585/api') }}"
+  openmetadata_service_name: "{{ env_var('OPENMETADATA_SERVICE','trino_iceberg_dev') }}"
+  openmetadata_jwt_token: "{{ env_var('OPENMETADATA_JWT','') }}"
+  # Elementary configuration for Iceberg Nessie
+  mute_ensure_materialization_override: true
+  elementary_disable_views: true
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+on-run-start:
+  - "{% set silver_loc = env_var('ICEBERG_SILVER_LOC', 's3://cedia-datalake-dev/iceberg/silver/sia/') %}{% do create_iceberg_schema(var('trino_catalog'), 'cedia_silver_sia', silver_loc) %}"
+  - "{% set gold_loc   = env_var('ICEBERG_GOLD_LOC',   's3://cedia-datalake-dev/iceberg/gold/sia/')   %}{% do create_iceberg_schema(var('trino_catalog'), 'cedia_gold_sia',   gold_loc) %}"
+
+models:
+  dbt_lakehouse_cedia:
+    +persist_docs: {relation: true, columns: true}
+    +on_schema_change: append_new_columns
+    +contract: {enforced: true}
+    +access: private
+    +tags: ['cedia']
+
+    silver:
+      +schema: cedia_silver_sia
+      +materialized: incremental
+      +incremental_strategy: merge
+      +table_properties: {format_version: '2'}
+      +access: protected
+      sia:
+        +tags: ['silver','sia']
+
+    gold:
+      +schema: cedia_gold_sia
+      +materialized: table
+      +table_properties: {format_version: '2'}
+      +access: public
+      sia:
+        +tags: ['gold','sia']
+
+  # Elementary package configuration for Iceberg Nessie
+  elementary:
+    +materialized: table
+    +on_schema_change: ignore

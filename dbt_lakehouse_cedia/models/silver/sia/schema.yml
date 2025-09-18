@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: stg_sia__proforma
+    description: "Silver: standardized Proformas from Bronze.sia_bronze.jvc_proforma"
+    access: protected
+    config:
+      contract:
+        enforced: false   # <- desactivado hasta listar todas las columnas
+    columns:
+      - name: proforma_id
+        description: "Technical PK (prof_codigo)"
+        tests: [not_null, unique]
+        data_type: bigint
+      - name: proforma_numero
+        description: "Business proforma number"
+        data_type: bigint
+      - name: fecha_proforma
+        description: "Proforma date"
+        tests: [not_null]
+        data_type: date
+      - name: total
+        description: "Total amount"
+        data_type: double
+      - name: _wm_last_update
+        description: "Unified watermark for incremental/CDC"
+        data_type: timestamp(6)

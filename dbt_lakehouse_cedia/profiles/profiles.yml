@@ -1,0 +1,19 @@
+cedia:
+  target: dev
+  outputs:
+    dev:
+      type: trino
+      host: "{{ env_var('TRINO_HOST','trino') }}"
+      port: "{{ env_var('TRINO_PORT','8083') | int }}"
+      user: "{{ env_var('TRINO_USER','dbt') }}"
+      catalog: "{{ env_var('TRINO_CATALOG','iceberg_dev') }}"
+      schema: "{{ env_var('DBT_DEFAULT_SCHEMA','dbt_dev') }}"
+      threads: 8
+    prod:
+      type: trino
+      host: "{{ env_var('TRINO_HOST_PROD','trino') }}"
+      port: "{{ env_var('TRINO_PORT_PROD','8083') | int }}"
+      user: "{{ env_var('TRINO_USER_PROD','dbt') }}"
+      catalog: "{{ env_var('TRINO_CATALOG_PROD','iceberg_prod') }}"
+      schema: "{{ env_var('DBT_DEFAULT_SCHEMA_PROD','dbt_prod') }}"
+      threads: 8
