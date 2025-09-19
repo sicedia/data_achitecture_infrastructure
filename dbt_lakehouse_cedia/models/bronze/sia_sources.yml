@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: sia_bronze
     description: "Bronze (raw) ingested by Airbyte from SIA intranet"
-    database: "{{ var('trino_catalog') }}"   # <- usa var, no target.database
+    database: "{{ env_var('TRINO_CATALOG','iceberg_dev') }}"   # <- usa env_var, no target.database
     schema: "db_sia_intranet"                # <- aquí está Airbyte
     # Configuración para OpenMetadata lineage
     meta:
@@ -51,6 +51,10 @@ sources:
             description: "Client ID"
           - name: prof_nombrecliente
             description: "Client name"
+          - name: created_at
+            description: "Record creation timestamp"
+          - name: updated_at
+            description: "Record last update timestamp"
           - name: _ab_cdc_updated_at
             description: "Airbyte CDC update timestamp"
           - name: _ab_cdc_deleted_at

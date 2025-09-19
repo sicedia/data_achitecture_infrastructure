@@ -181,17 +181,17 @@ The `dbt` folder is set up to run transformations against the data lake.
 
 ```bash
 # Build the dbt container image
-docker compose -p cedia_etl -f .\dbt\docker-compose.yml build dbt
+docker compose -p cedia_etl -f .\dbt_lakehouse_cedia\docker-compose.yml build dbt
 
 # Run a dbt build for the 'dev' target
 # This will run all models and tests
-docker compose -p cedia_etl -f .\dbt\docker-compose.yml run --rm dbt dbt build --target dev
+docker compose -p cedia_etl -f .\dbt_lakehouse_cedia\docker-compose.yml run --rm -e TRINO_PORT=8080 dbt dbt build --target dev
 
 # Run only specific models
-docker compose -p cedia_etl -f .\dbt\docker-compose.yml run --rm dbt dbt build --target dev --select stg_proforma fct_proforma
+docker compose -p cedia_etl -f .\dbt_lakehouse_cedia\docker-compose.yml run --rm -e TRINO_PORT=8080  dbt dbt build --target dev --select stg_proforma fct_proforma
 
 # Test the connection to the warehouse
-docker compose -p cedia_etl -f .\dbt\docker-compose.yml run --rm dbt dbt debug --target dev
+docker compose -p cedia_etl -f .\dbt_lakehouse_cedia\docker-compose.yml run --rm -e TRINO_PORT=8080  dbt dbt debug --target dev
 ```
 
 ## 📂 Project Structure

@@ -1,55 +1,96 @@
+# =============================================================================
+# dbt Project Configuration for CEDIA Data Lakehouse
+# =============================================================================
+# This project implements a medallion architecture (Bronze -> Silver -> Gold)
+# using dbt, Trino, and Apache Iceberg with Nessie catalog for data versioning
+
+# Project metadata
 name: 'dbt_lakehouse_cedia'
 version: '1.0.0'
 config-version: 2
-profile: 'cedia'
+profile: 'cedia'  # References profiles.yml configuration
 
-# Required flags for Elementary package
+# =============================================================================
+# Global Flags
+# =============================================================================
+# Required flags for Elementary package compatibility
 flags:
-  require_explicit_package_overrides_for_builtin_materializations: false
+  # Explicitly allow Elementary to override built-in test materialization
+  # This prevents deprecation warnings in current and future dbt versions
+  require_explicit_package_overrides_for_builtin_materializations: true
 
+# =============================================================================
+# Global Variables
+# =============================================================================
 vars:
+  # Trino catalog configuration
   trino_catalog: "{{ env_var('TRINO_CATALOG','iceberg_dev') }}"
+  
+  # OpenMetadata integration for data lineage and governance
   openmetadata_host_port: "{{ env_var('OPENMETADATA_HOST','http://openmetadata-server:8585/api') }}"
   openmetadata_service_name: "{{ env_var('OPENMETADATA_SERVICE','trino_iceberg_dev') }}"
   openmetadata_jwt_token: "{{ env_var('OPENMETADATA_JWT','') }}"
-  # Elementary configuration for Iceberg Nessie
-  mute_ensure_materialization_override: true
-  elementary_disable_views: true
+  
+  # Elementary package configuration for Iceberg Nessie compatibility
+  mute_ensure_materialization_override: true  # Suppress materialization warnings
+  elementary_disable_views: true             # Disable views (not supported by Iceberg Nessie)
 
-model-paths: ["models"]
-target-path: "target"
-clean-targets: ["target", "dbt_packages"]
+# =============================================================================
+# Project Structure
+# =============================================================================
+model-paths: ["models"]        # Where dbt models are located
+target-path: "target"          # Where compiled SQL and artifacts are stored
+clean-targets: ["target", "dbt_packages"]  # Directories to clean on dbt clean
 
+# =============================================================================
+# Pre-run Hooks
+# =============================================================================
+# Automatically create Iceberg schemas before running models
 on-run-start:
+  # Create Silver layer schema in Iceberg catalog
   - "{% set silver_loc = env_var('ICEBERG_SILVER_LOC', 's3://cedia-datalake-dev/iceberg/silver/sia/') %}{% do create_iceberg_schema(var('trino_catalog'), 'cedia_silver_sia', silver_loc) %}"
+  # Create Gold layer schema in Iceberg catalog  
   - "{% set gold_loc   = env_var('ICEBERG_GOLD_LOC',   's3://cedia-datalake-dev/iceberg/gold/sia/')   %}{% do create_iceberg_schema(var('trino_catalog'), 'cedia_gold_sia',   gold_loc) %}"
 
+# =============================================================================
+# Model Configuration
+# =============================================================================
 models:
+  # Main project models configuration
   dbt_lakehouse_cedia:
-    +persist_docs: {relation: true, columns: true}
-    +on_schema_change: append_new_columns
-    +contract: {enforced: true}
-    +access: private
-    +tags: ['cedia']
+    # Documentation and schema management
+    +persist_docs: {relation: true, columns: true}  # Persist docs to database
+    +on_schema_change: append_new_columns           # Handle schema changes gracefully
+    +contract: {enforced: true}                    # Enforce model contracts for data quality
+    +access: private                                # Default access level
+    +tags: ['cedia']                               # Default tags for all models
 
+    # =========================================================================
+    # Silver Layer Configuration (Cleaned & Standardized Data)
+    # =========================================================================
     silver:
-      +schema: cedia_silver_sia
-      +materialized: incremental
-      +incremental_strategy: merge
-      +table_properties: {format_version: '2'}
-      +access: protected
-      sia:
-        +tags: ['silver','sia']
+      +schema: cedia_silver_sia                    # Dedicated schema for silver layer
+      +materialized: table                         # Use table materialization (Iceberg Nessie compatible)
+      +table_properties: {format_version: '2'}    # Iceberg format version 2 for better performance
+      +access: protected                           # Protected access level
+      sia:                                         # SIA domain models
+        +tags: ['silver','sia']                   # Domain-specific tags
 
+    # =========================================================================
+    # Gold Layer Configuration (Business-Ready Data)
+    # =========================================================================
     gold:
-      +schema: cedia_gold_sia
-      +materialized: table
-      +table_properties: {format_version: '2'}
-      +access: public
-      sia:
-        +tags: ['gold','sia']
+      +schema: cedia_gold_sia                     # Dedicated schema for gold layer
+      +materialized: table                        # Use table materialization (Iceberg Nessie compatible)
+      +table_properties: {format_version: '2'}   # Iceberg format version 2 for better performance
+      +access: public                             # Public access for business users
+      sia:                                        # SIA domain models
+        +tags: ['gold','sia']                    # Domain-specific tags
 
-  # Elementary package configuration for Iceberg Nessie
+  # =============================================================================
+  # Elementary Package Configuration
+  # =============================================================================
+  # Elementary provides data quality monitoring and observability
   elementary:
-    +materialized: table
-    +on_schema_change: ignore
+    +materialized: table                          # Use table materialization (Iceberg Nessie compatible)
+    +on_schema_change: ignore                     # Ignore schema changes for monitoring tables

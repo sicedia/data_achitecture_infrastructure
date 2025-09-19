@@ -1,7 +1,5 @@
 {{ config(
-    materialized='incremental',
-    unique_key='proforma_id',
-    incremental_strategy='merge',
+    materialized='table',
     table_properties={'format_version': '2'}
 ) }}
 
@@ -9,15 +7,6 @@ WITH bronze AS (
   SELECT *
   FROM {{ source('sia_bronze','jvc_proforma') }}
   WHERE COALESCE(_ab_cdc_deleted_at,'') = ''
-  {% if is_incremental() %}
-    AND COALESCE(
-          TRY(CAST(from_iso8601_timestamp(_ab_cdc_updated_at) AS timestamp)),
-          TRY(from_unixtime(_airbyte_extracted_at/1000.0)),
-          TRY(from_unixtime(_airbyte_extracted_at))
-        )
-        >
-        (SELECT COALESCE(MAX(_wm_last_update), TIMESTAMP '1970-01-01') FROM {{ this }})
-  {% endif %}
 ),
 typed AS (
   SELECT
