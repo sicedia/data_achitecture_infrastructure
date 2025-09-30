@@ -84,7 +84,7 @@ After installation, you must connect the Airbyte containers to our shared Docker
 docker network connect data-poc 68a10ca66d3f
 # Add other airbyte containers if necessary
 ```
-Remplazar 68a10ca66d3f por el id del contenedor general de Airbyte
+Replace 68a10ca66d3f by the Airbyte general container id.
 
 #### Check
 ```bash
