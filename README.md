@@ -2,7 +2,7 @@
 
 ---
 
-This repository contains the infrastructure-as-code for deploying a modern data lakehouse stack using Docker. It provides a scalable and version-controlled environment for data ingestion, storage, transformation, and querying.
+This repository contains the infrastructure-as-code for deploying a modern data lakehouse stack using Docker. It provides a scalable and version-controlled environment for data ingestion, storage, transformation, and querying. Only for test pourpose.
 
 ## 🏛️ Core Architecture
 
